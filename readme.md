@@ -22,7 +22,7 @@ npm install
 ## Run
 
 ```
-node toy-robot.js`
+node toy-robot.js
 ```
 
 ## Tests

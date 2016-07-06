@@ -21,8 +21,9 @@
   "homepage": "https://github.com/Amerdrix/toy-robot#readme",
   "dependencies": {
     "chai": "^3.5.0",
+    "colors": "^1.1.2",
     "mocha": "^2.5.3",
-    "rx-lite": "^4.0.8",
+    "rx": "^4.1.0",
     "rx-node": "^1.0.2"
   }
 }

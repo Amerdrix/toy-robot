@@ -1,7 +1,7 @@
-const RxNode = require('rx-node')
-
-exports.run = (stream) => {
-    RxNode.fromStream(stream)
-      .select(buffer => buffer.toString().trim())
-      .subscribe(line => console.log("echo" ,line))
+const Rx = require('rx')
+exports.run = (input) => {
+    return {
+        "std$": Rx.Observable.empty(),
+        "error$": input.select(cmd => `The command ' ${cmd} ' could not be interpreted`)
+    };
 }
