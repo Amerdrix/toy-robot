@@ -67,7 +67,44 @@ describe('app.js', () => {
           done()
         })
       })
+    })
+  })
 
+  describe("#executeCommand", () => {
+    describe("when the command is jibberish", () => {
+        const jibberish = 'asoeuhsaoteu'
+
+        it("returns the robotLocation unchanged", () => {
+            const robotLocation = {}
+            const result = app.__int__.executeCommand(robotLocation, jibberish)
+            expect(result.robotLocation).to.be.equal(robotLocation)
+        })
+    })
+
+    describe("PLACE commands", () => {
+      describe("when the place command is valid", () => {
+        const command = 'PLACE 1,2 NORTH'
+
+        it("returns the robotLocation as per the command ", () => {
+            const robotLocation = {}
+
+            const result = app.__int__.executeCommand(robotLocation, command)
+
+            expect(result.robotLocation).to.be.eql({x: 1, y: 2, direction: "NORTH"})
+        })
+      })
+
+      describe("when the place command has mixed case", () => {
+        const command = 'PlaCe 4,1 noRTh'
+
+        it("returns the robotLocation as per the command ", () => {
+            const robotLocation = {}
+
+            const result = app.__int__.executeCommand(robotLocation, command)
+
+            expect(result.robotLocation).to.be.eql({x: 4, y: 1, direction: "NORTH"})
+        })
+      })
     })
   })
 })
