@@ -4,8 +4,8 @@ const RxNode = require('rx-node')
 const app = require('./src/app')
 
 const inputLine$ = RxNode
-                    .fromStream(process.stdin)
-                    .select(buffer => buffer.toString().trim())
+    .fromStream(process.stdin)
+    .select(buffer => buffer.toString().trim())
 
 const streams = app.run(inputLine$)
 

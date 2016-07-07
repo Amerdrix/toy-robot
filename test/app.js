@@ -169,8 +169,8 @@ describe('app.js', () => {
           expect(result.robotLocation).to.be.eql({ x: 4, y: 1, direction: 'NORTH' })
         })
       })
-      
-            describe('when the place command has an invalid direction', () => {
+
+      describe('when the place command has an invalid direction', () => {
         const command = 'PLACE 1,2,Nrt'
 
         it('returns the robotLocation unchanged', () => {
@@ -186,8 +186,8 @@ describe('app.js', () => {
           expect(result.err).to.not.be.null
         })
       })
-      
-            
+
+
       describe('when the place command has an invalid Y position', () => {
         const command = 'PLACE 1,200,WEST'
 
@@ -204,8 +204,8 @@ describe('app.js', () => {
           expect(result.err).to.not.be.null
         })
       })
-      
-                  
+
+
       describe('when the place command has an invalid X position', () => {
         const command = 'PLACE 50,2,WEST'
 
