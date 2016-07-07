@@ -1,6 +1,8 @@
 const Rx = require('rx')
 const _ = require('lodash')
 
+const tableBounds = {x: [0, 4], y: [0, 4]}
+
 const directions = ['NORTH', 'EAST', 'SOUTH', 'WEST']  
 
 function run (input) {
@@ -15,7 +17,7 @@ function run (input) {
 
 function executeCommand(robotLocation, command){
   const commandList = [
-    [/^place (\d+),(\d+) (\w+)$/i, place],
+    [/^place (-?\d+),(-?\d+),(\w+)$/i, place],
     [/^report$/i, report],
     [/^move$/i, move],
     [/^left$/i, turnLeft],
@@ -34,7 +36,7 @@ function turn(turnDirection, robotLocation)
 
   const currentDirectionIndex = directions.indexOf(robotLocation.direction)
   const indexOfNewDirection = (currentDirectionIndex + turnDirection + 4) % 4
-  return  Object.assign({}, robotLocation, {direction: directions[indexOfNewDirection] })
+  return {robotLocation: Object.assign({}, robotLocation, {direction: directions[indexOfNewDirection] })}
 }
 const turnLeft = _.curry(turn)(-1)
 const turnRight = _.curry(turn)(1)
@@ -42,6 +44,14 @@ const turnRight = _.curry(turn)(1)
 function move(robotLocation) {
    if(!robotLocation)
     return {err: 'Robot has not been placed'}
+    
+  const currentDirectionIndex = directions.indexOf(robotLocation.direction)
+  const axis = currentDirectionIndex % 2 === 0 ? 'y' : 'x';
+  const movementDirection = currentDirectionIndex < 2 ? 1 : -1
+  const [min, max] = tableBounds[axis]
+    
+    
+  return {robotLocation: Object.assign({}, robotLocation, { [axis]: Math.max(min, Math.min(max, robotLocation[axis] +  movementDirection)) })}
 }
 
 function report(robotLocation) {
@@ -55,6 +65,14 @@ function report(robotLocation) {
 }
 
 function place(robotLocation, [cmd,x,y,direction]){
+  if(!_(directions).includes(direction.toUpperCase())){
+    return {robotLocation, err: `${direction} must be one of ${directions}`}
+  }
+  
+  if( x < tableBounds.x[0] || x > tableBounds.x[1] || y < tableBounds.y[0] || y> tableBounds.y[1] ){
+    return {robotLocation, err: `${x},${y} must be within ${tableBounds.x[0]}:${tableBounds.x[1]},${tableBounds.y[0]}:${tableBounds.y[1]}`}
+  }
+  
   return {
     robotLocation: {
       x: Number(x),

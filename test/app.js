@@ -4,6 +4,8 @@ const app = require('../src/app')
 
 
 describe('app.js', () => {
+
+  /// --------- #run -------------- 
   describe('#run', () => {
     let output = null;
 
@@ -48,8 +50,7 @@ describe('app.js', () => {
     })
 
     describe('when there is a REPORT command following a valid PLACE command', () => {
-
-      const place = 'PLACE 1,1 NORTH'
+      const place = 'PLACE 1,1,NORTH'
       const report = 'REPORT'
 
       const input$ = new Rx.Observable.from([place, report])
@@ -68,8 +69,53 @@ describe('app.js', () => {
         })
       })
     })
+
+    describe('acceptance tests', () => {
+      it('scenario A', (done) => {
+
+        const input$ = new Rx.Observable.from([
+          'PLACE 0,0,NORTH',
+          'MOVE',
+          'REPORT'])
+
+        app.run(input$).std$.first().subscribe(output => {
+          expect(output).to.eql('> 0,1 NORTH')
+          done()
+        })
+      })
+
+      it('scenario B', (done) => {
+
+        const input$ = new Rx.Observable.from([
+          'PLACE 0,0,NORTH',
+          'LEFT',
+          'REPORT'])
+
+        app.run(input$).std$.first().subscribe(output => {
+          expect(output).to.eql('> 0,0 WEST')
+          done()
+        })
+      })
+
+      it('scenario C', (done) => {
+
+        const input$ = new Rx.Observable.from([
+          'PLACE 1,2,EAST',
+          'MOVE',
+          "MOVE",
+          "LEFT",
+          "MOVE",
+          'REPORT'])
+
+        app.run(input$).std$.first().subscribe(output => {
+          expect(output).to.eql('> 3,3 NORTH')
+          done()
+        })
+      })
+    })
   })
 
+  /// --------- #executeCommand --------------
   describe('#executeCommand', () => {
     describe('when the command is jibberish', () => {
       const jibberish = 'asoeuhsaoteu'
@@ -103,8 +149,7 @@ describe('app.js', () => {
 
     describe('PLACE', () => {
       describe('when the place command is valid', () => {
-        const command = 'PLACE 1,2 NORTH'
-
+        const command = 'PLACE 1,2,NORTH'
         it('returns the robotLocation as per the command ', () => {
           const robotLocation = {}
           const result = app.__int__.executeCommand(robotLocation, command)
@@ -114,7 +159,7 @@ describe('app.js', () => {
       })
 
       describe('when the place command has mixed case', () => {
-        const command = 'PlaCe 4,1 noRTh'
+        const command = 'PlaCe 4,1,noRTh'
 
         it('returns the robotLocation as per the command ', () => {
           const robotLocation = {}
@@ -124,15 +169,146 @@ describe('app.js', () => {
           expect(result.robotLocation).to.be.eql({ x: 4, y: 1, direction: 'NORTH' })
         })
       })
+      
+            describe('when the place command has an invalid direction', () => {
+        const command = 'PLACE 1,2,Nrt'
+
+        it('returns the robotLocation unchanged', () => {
+          const robotLocation = {}
+          const result = app.__int__.executeCommand(robotLocation, command)
+          expect(result.robotLocation).to.be.equal(robotLocation)
+        })
+
+        it('returns an error', () => {
+          const robotLocation = {}
+          const result = app.__int__.executeCommand(robotLocation, command)
+
+          expect(result.err).to.not.be.null
+        })
+      })
+      
+            
+      describe('when the place command has an invalid Y position', () => {
+        const command = 'PLACE 1,200,WEST'
+
+        it('returns the robotLocation unchanged', () => {
+          const robotLocation = {}
+          const result = app.__int__.executeCommand(robotLocation, command)
+          expect(result.robotLocation).to.be.equal(robotLocation)
+        })
+
+        it('returns an error', () => {
+          const robotLocation = {}
+          const result = app.__int__.executeCommand(robotLocation, command)
+
+          expect(result.err).to.not.be.null
+        })
+      })
+      
+                  
+      describe('when the place command has an invalid X position', () => {
+        const command = 'PLACE 50,2,WEST'
+
+        it('returns the robotLocation unchanged', () => {
+          const robotLocation = {}
+          const result = app.__int__.executeCommand(robotLocation, command)
+          expect(result.robotLocation).to.be.equal(robotLocation)
+        })
+
+        it('returns an error', () => {
+          const robotLocation = {}
+          const result = app.__int__.executeCommand(robotLocation, command)
+
+          expect(result.err).to.not.be.null
+        })
+      })
     })
 
     describe('MOVE', () => {
       const command = 'MOVE'
       WhenTheRobotHasNotBeenPlaced((robotLocation) => {
         it('returns an error message', () => {
-
           const result = app.__int__.executeCommand(robotLocation, command)
           expect(result).to.be.eql({ err: 'Robot has not been placed' })
+        })
+      })
+
+      describe("when the robots direction is NORTH", () => {
+        describe("and is in a position where it can move", () => {
+          const robotLocation = { x: 0, y: 0, direction: 'NORTH' }
+
+          it("moves north incrementing 'y' ", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql({ x: 0, y: 1, direction: 'NORTH' })
+          })
+        })
+
+        describe("and is in a position where it cannot move", () => {
+          const robotLocation = { x: 0, y: 4, direction: 'NORTH' }
+
+          it("does not move", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql(robotLocation)
+          })
+        })
+      })
+
+      describe("when the robots direction is EAST", () => {
+        describe("and is in a position where it can move", () => {
+          const robotLocation = { x: 0, y: 0, direction: 'EAST' }
+
+          it("moves EAST incrementing 'y' ", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql({ x: 1, y: 0, direction: 'EAST' })
+          })
+        })
+
+        describe("and is in a position where it cannot move", () => {
+          const robotLocation = { x: 4, y: 0, direction: 'EAST' }
+
+          it("does not move", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql(robotLocation)
+          })
+        })
+      })
+
+      describe("when the robots direction is SOUTH", () => {
+        describe("and is in a position where it can move", () => {
+          const robotLocation = { x: 0, y: 3, direction: 'SOUTH' }
+
+          it("moves SOUTH decrementing 'y' ", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql({ x: 0, y: 2, direction: 'SOUTH' })
+          })
+        })
+
+        describe("and is in a position where it cannot move", () => {
+          const robotLocation = { x: 0, y: 0, direction: 'SOUTH' }
+
+          it("does not move", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql(robotLocation)
+          })
+        })
+      })
+
+      describe("when the robots direction is WEST", () => {
+        describe("and is in a position where it can move", () => {
+          const robotLocation = { x: 3, y: 0, direction: 'WEST' }
+
+          it("moves WEST incrementing 'y' ", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql({ x: 2, y: 0, direction: 'WEST' })
+          })
+        })
+
+        describe("and is in a position where it cannot move", () => {
+          const robotLocation = { x: 0, y: 4, direction: 'WEST' }
+          it("does not move", () => {
+            const result = app.__int__.executeCommand(robotLocation, command)
+            expect(result.robotLocation).to.be.eql(robotLocation)
+          })
         })
       })
     })
@@ -149,28 +325,28 @@ describe('app.js', () => {
       WhenTheRobotIsFacing('NORTH', (robotLocation) => {
         it('returns a robot facing WEST', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'WEST' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'WEST' }))
         })
       })
 
       WhenTheRobotIsFacing('WEST', (robotLocation) => {
         it('returns a robot facing SOUTH', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'SOUTH' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'SOUTH' }))
         })
       })
 
       WhenTheRobotIsFacing('SOUTH', (robotLocation) => {
         it('returns a robot facing EAST', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'EAST' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'EAST' }))
         })
       })
 
       WhenTheRobotIsFacing('EAST', (robotLocation) => {
         it('returns a robot facing NORTH', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'NORTH' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'NORTH' }))
         })
       })
 
@@ -189,28 +365,28 @@ describe('app.js', () => {
       WhenTheRobotIsFacing('NORTH', (robotLocation) => {
         it('returns a robot facing EAST', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'EAST' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'EAST' }))
         })
       })
 
       WhenTheRobotIsFacing('EAST', (robotLocation) => {
         it('returns a robot facing SOUTH', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'SOUTH' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'SOUTH' }))
         })
       })
 
       WhenTheRobotIsFacing('SOUTH', (robotLocation) => {
         it('returns a robot facing WEST', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'WEST' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'WEST' }))
         })
       })
 
       WhenTheRobotIsFacing('WEST', (robotLocation) => {
         it('returns a robot facing NORTH', () => {
           const result = app.__int__.executeCommand(robotLocation, command)
-          expect(result).to.be.eql(Object.assign({}, robotLocation, { direction: 'NORTH' }))
+          expect(result.robotLocation).to.be.eql(Object.assign({}, robotLocation, { direction: 'NORTH' }))
         })
       })
     })
