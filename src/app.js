@@ -5,8 +5,11 @@ const tableBounds = { x: [0, 4], y: [0, 4] }
 
 const directions = ['NORTH', 'EAST', 'SOUTH', 'WEST']
 
-function run(input) {
-  const commandResult$ = input
+/*
+  This is the main loop. It takes an Rx.Observable of strings whcih represent commands to the robot
+*/
+function run(input$) {
+  const commandResult$ = input$
     .scan((state, command) => executeCommand(state.robotLocation, command), {})
     .share()
   return {
@@ -15,6 +18,14 @@ function run(input) {
   };
 }
 
+/*
+  The main command handler. This is responsible for taking the existing robot, a command, and then returning an object in the form of
+   { 
+     robotLocation: {x:number,y:number,direction:string}
+     error?: string
+     std?: string
+    }
+*/
 function executeCommand(robotLocation, command) {
   const commandList = [
     [/^place (-?\d+),(-?\d+),(\w+)$/i, place],
@@ -29,12 +40,16 @@ function executeCommand(robotLocation, command) {
   return handler(robotLocation, command.match(argumentRe))
 }
 
+/*
+  Takes a direction and robot location. Returns a new robot location rotated in that direction.
+  The order of arguments is configured to make curring to left/right easy. 
+*/
 function turn(turnDirection, robotLocation) {
   if (!robotLocation)
     return { err: 'Robot has not been placed' }
 
   const currentDirectionIndex = directions.indexOf(robotLocation.direction)
-  const indexOfNewDirection = (currentDirectionIndex + turnDirection + 4) % 4
+  const indexOfNewDirection = (currentDirectionIndex + turnDirection + directions.length) % directions.length
   return { robotLocation: Object.assign({}, robotLocation, { direction: directions[indexOfNewDirection] }) }
 }
 const turnLeft = _.curry(turn)(-1)
@@ -45,8 +60,15 @@ function move(robotLocation) {
     return { err: 'Robot has not been placed' }
 
   const currentDirectionIndex = directions.indexOf(robotLocation.direction)
-  const axis = currentDirectionIndex % 2 === 0 ? 'y' : 'x';
-  const movementDirection = currentDirectionIndex < 2 ? 1 : -1
+
+  /*
+  Ascii art compass for help understanding the axis and movementDirection calcs
+          N: 0
+     W:3  -|-  E:1
+          S: 2       
+  */
+  const axis = currentDirectionIndex % 2 === 0 ? 'y' : 'x'; // North/South are even - East/West are odd 
+  const movementDirection = currentDirectionIndex < 2 ? 1 : -1 // Top/Right (< 2) are positive.
   const [min, max] = tableBounds[axis]
 
 
