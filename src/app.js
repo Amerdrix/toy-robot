@@ -6,10 +6,11 @@ const tableBounds = { x: [0, 4], y: [0, 4] }
 const directions = ['NORTH', 'EAST', 'SOUTH', 'WEST']
 
 /*
-  This is the main loop. It takes an Rx.Observable of strings whcih represent commands to the robot
+  The main loop
+  @param {Rx.Observable} input$ - A stream of commands to execute 
 */
-function run(input$) {
-  const commandResult$ = input$
+function run(commands$) {
+  const commandResult$ = commands$
     .scan((state, command) => executeCommand(state.robotLocation, command), {})
     .share()
   return {
@@ -19,12 +20,9 @@ function run(input$) {
 }
 
 /*
-  The main command handler. This is responsible for taking the existing robot, a command, and then returning an object in the form of
-   { 
-     robotLocation: {x:number,y:number,direction:string}
-     error?: string
-     std?: string
-    }
+  Executes an arbitrary command
+  @param { Object } robotLocation - The current location of the robot
+  @param { string } command - the command to parse and execute
 */
 function executeCommand(robotLocation, command) {
   const commandList = [
@@ -41,8 +39,9 @@ function executeCommand(robotLocation, command) {
 }
 
 /*
-  Takes a direction and robot location. Returns a new robot location rotated in that direction.
-  The order of arguments is configured to make curring to left/right easy. 
+  Returns a rotated version of the robot location
+  @param { number } turnDirection - a value representing the direction to turn. 1 for clockwise,  -1 for anti-clockwise
+  @param { Object } 
 */
 function turn(turnDirection, robotLocation) {
   if (!robotLocation)
@@ -68,7 +67,7 @@ function move(robotLocation) {
           S: 2       
   */
   const axis = currentDirectionIndex % 2 === 0 ? 'y' : 'x'; // North/South are even - East/West are odd 
-  const movementDirection = currentDirectionIndex < 2 ? 1 : -1 // Top/Right (< 2) are positive.
+  const movementDirection = currentDirectionIndex < 2 ? 1 : -1 // Top/Right (0 and 1) are positive.
   const [min, max] = tableBounds[axis]
 
 
