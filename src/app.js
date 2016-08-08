@@ -9,13 +9,13 @@ const directions = ['NORTH', 'EAST', 'SOUTH', 'WEST']
   The main loop
   @param {Rx.Observable} input$ - A stream of commands to execute
 */
-function run(input$) {
+exports.run = function(input$) {
   const commandResult$ = input$
     .scan((state, command) => executeCommand(state.robotLocation, command), {})
     .share()
   return {
-    'std$': _selectPresentKeys(commandResult$, 'std'),
-    'error$': _selectPresentKeys(commandResult$, 'err')
+    'std$': selectPresentKeys(commandResult$, 'std'),
+    'error$': selectPresentKeys(commandResult$, 'err')
   };
 }
 
@@ -135,11 +135,11 @@ function error(robotLocation, command) {
   @param { Rx.Observable<Object> } object$ - The stream of objects
   @param { string } Key - The key to check for
 */
-function _selectPresentKeys(object$, key) {
+function selectPresentKeys(object$, key) {
   return object$.where(obj => key in obj).select(obj => obj[key])
 }
 
-exports.run = run;
+// Exported for testability
 exports.__int__ = {
   executeCommand
 }
